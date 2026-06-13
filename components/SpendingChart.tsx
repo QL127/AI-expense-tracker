@@ -33,7 +33,7 @@ export default function SpendingChart({ categoryTotals }: { categoryTotals: Cate
             ))}
           </Pie>
           <Tooltip
-            formatter={(val: number) => formatCurrency(val)}
+            formatter={(val) => formatCurrency(Number(val))}
             contentStyle={{
               backgroundColor: "#111827",
               border: "1px solid #1f2937",

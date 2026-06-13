@@ -44,7 +44,9 @@ export default function ExpenseList({ expenses }: { expenses: Expense[] }) {
               <div className="flex items-center gap-1.5">
                 <p className="text-sm font-medium text-white truncate">{expense.title}</p>
                 {expense.ai_categorized && (
-                  <Sparkles size={11} className="text-purple-400 shrink-0" title="AI categorized" />
+                  <span title="AI categorized">
+                    <Sparkles size={11} className="text-purple-400 shrink-0" />
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">

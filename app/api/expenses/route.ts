@@ -2,15 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// GET /api/expenses — fetch all for authenticated user
-export async function GET() {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
+export const dynamic = "force-dynamic";
+
+async function createSupabase() {
+  const cookieStore = await cookies();
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (n) => cookieStore.get(n)?.value } }
+    { cookies: { get: (n: string) => cookieStore.get(n)?.value } }
   );
+}
 
+export async function GET() {
+  const supabase = await createSupabase();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -24,15 +28,8 @@ export async function GET() {
   return NextResponse.json({ data });
 }
 
-// POST /api/expenses — create a new expense
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (n) => cookieStore.get(n)?.value } }
-  );
-
+  const supabase = await createSupabase();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -61,15 +58,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ data }, { status: 201 });
 }
 
-// DELETE /api/expenses?id=xxx
 export async function DELETE(req: NextRequest) {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (n) => cookieStore.get(n)?.value } }
-  );
-
+  const supabase = await createSupabase();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -80,7 +70,7 @@ export async function DELETE(req: NextRequest) {
     .from("expenses")
     .delete()
     .eq("id", id)
-    .eq("user_id", session.user.id);   // ensures users can only delete their own
+    .eq("user_id", session.user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

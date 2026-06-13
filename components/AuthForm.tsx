@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function AuthForm() {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -12,7 +12,12 @@ export default function AuthForm() {
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
 
   const router = useRouter();
-  const supabase = createClient();
+
+  // ✅ Create client inside component so it only runs in browser
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   async function handleSubmit() {
     setLoading(true);
@@ -43,7 +48,6 @@ export default function AuthForm() {
         {mode === "login" ? "Welcome back" : "Create account"}
       </h2>
 
-      {/* Email */}
       <div>
         <label className="label">Email</label>
         <input
@@ -55,7 +59,6 @@ export default function AuthForm() {
         />
       </div>
 
-      {/* Password */}
       <div>
         <label className="label">Password</label>
         <input
@@ -68,7 +71,6 @@ export default function AuthForm() {
         />
       </div>
 
-      {/* Feedback */}
       {message && (
         <p className={`text-sm rounded-lg px-3 py-2 ${
           message.type === "error"
@@ -79,12 +81,10 @@ export default function AuthForm() {
         </p>
       )}
 
-      {/* Submit */}
       <button className="btn-primary w-full" onClick={handleSubmit} disabled={loading}>
         {loading ? "Loading…" : mode === "login" ? "Sign in" : "Create account"}
       </button>
 
-      {/* Toggle mode */}
       <p className="text-center text-sm text-gray-500">
         {mode === "login" ? "No account?" : "Already have one?"}{" "}
         <button

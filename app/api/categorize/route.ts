@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import type { Category } from "@/types";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+export const dynamic = "force-dynamic";
 
 const CATEGORIES: Category[] = [
   "Food & Dining", "Transport", "Housing", "Entertainment",
@@ -17,15 +16,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
+    // ✅ Initialize inside the function so it only runs at request time
+    const OpenAI = (await import("openai")).default;
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",   // fast + cheap — perfect for categorization
+      model: "gpt-4o-mini",
       max_tokens: 20,
       temperature: 0,
       messages: [
         {
           role: "system",
-          content: `You are an expense categorizer. Given an expense title and optional amount, 
-reply with ONLY one of these exact category names, nothing else:
+          content: `You are an expense categorizer. Reply with ONLY one of these exact category names:
 ${CATEGORIES.join(", ")}`,
         },
         {
@@ -43,6 +45,6 @@ ${CATEGORIES.join(", ")}`,
     return NextResponse.json({ category });
   } catch (err) {
     console.error("AI categorize error:", err);
-    return NextResponse.json({ category: "Other" });   // graceful fallback
+    return NextResponse.json({ category: "Other" });
   }
 }
